@@ -9,6 +9,7 @@ type FieldProps = {
   error?: string;
   type?: string;
   inputMode?: "decimal" | "numeric" | "text";
+  listId?: string;
 };
 
 const Field = ({
@@ -20,6 +21,7 @@ const Field = ({
   error,
   type = "text",
   inputMode = "text",
+  listId,
 }: FieldProps) => {
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange(event.target.value);
@@ -37,6 +39,7 @@ const Field = ({
         id={id}
         type={type}
         inputMode={inputMode}
+        list={listId}
         value={value}
         onChange={handleChange}
         placeholder={placeholder}

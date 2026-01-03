@@ -1,3 +1,9 @@
+import { useEffect, useMemo, useState } from "react";
+import {
+  fetchMunicipalities,
+  MunicipalityOption,
+  normalizeText,
+} from "../services/ibge";
 import Field from "./Field";
 
 type RouteFormProps = {
@@ -32,6 +38,55 @@ const RouteForm = ({
   loading,
   errors,
 }: RouteFormProps) => {
+  const [municipalities, setMunicipalities] = useState<MunicipalityOption[]>(
+    []
+  );
+  const [municipalitiesError, setMunicipalitiesError] = useState<string | null>(
+    null
+  );
+
+  useEffect(() => {
+    let active = true;
+    fetchMunicipalities()
+      .then((data) => {
+        if (!active) {
+          return;
+        }
+        setMunicipalities(data);
+        setMunicipalitiesError(null);
+      })
+      .catch(() => {
+        if (!active) {
+          return;
+        }
+        setMunicipalities([]);
+        setMunicipalitiesError("Falha ao carregar municipios.");
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const buildOptions = (query: string) => {
+    const normalizedQuery = normalizeText(query);
+    if (!normalizedQuery) {
+      return municipalities.slice(0, 5);
+    }
+    return municipalities
+      .filter((item) => item.search.includes(normalizedQuery))
+      .slice(0, 5);
+  };
+  console.log(buildOptions("sao"));
+
+  const originOptions = useMemo(
+    () => buildOptions(origin),
+    [origin, municipalities]
+  );
+  const destinationOptions = useMemo(
+    () => buildOptions(destination),
+    [destination, municipalities]
+  );
+
   return (
     <div className="rounded-3xl border border-ink-700/60 bg-ink-800/70 p-6 shadow-glow">
       <div className="mb-6 flex items-center justify-between">
@@ -54,7 +109,13 @@ const RouteForm = ({
           value={origin}
           onChange={onOriginChange}
           error={errors.origin}
+          listId="municipalities-origin"
         />
+        <datalist id="municipalities-origin">
+          {originOptions.map((option) => (
+            <option key={option.label} value={option.value} label={option.label} />
+          ))}
+        </datalist>
         <Field
           id="destination"
           label="Destino"
@@ -62,7 +123,13 @@ const RouteForm = ({
           value={destination}
           onChange={onDestinationChange}
           error={errors.destination}
+          listId="municipalities-destination"
         />
+        <datalist id="municipalities-destination">
+          {destinationOptions.map((option) => (
+            <option key={option.label} value={option.value} label={option.label} />
+          ))}
+        </datalist>
         <Field
           id="fuelConsumption"
           label="Consumo (km/l)"
@@ -91,6 +158,9 @@ const RouteForm = ({
         >
           {loading ? "Calculando..." : "Calcular rota"}
         </button>
+        {municipalitiesError ? (
+          <p className="text-xs text-amber-300">{municipalitiesError}</p>
+        ) : null}
       </div>
     </div>
   );
