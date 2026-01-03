@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-ink-900 text-ink-100;
+}
+
+.leaflet-container {
+  @apply h-full w-full;
+}
